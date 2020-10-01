@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -11,6 +11,7 @@ class CategoryController extends Controller
 {
     //variavel para instancia do objeto
     private $category;
+    private $totalPage = 10;
 
     //construtor para instanciar o objeto
     public function __construct(Category $category)
@@ -26,6 +27,14 @@ class CategoryController extends Controller
         return response()->json($categories, 200);
     }
 
+    //metodo para cadastrar na base
+    public function store(StoreUpdateCategoryFormRequest $request)
+    {
+        $category = $this->category->create($request->all());
+        
+        return response()->json($category, 201);
+    }
+
     //exibir registro específico
     public function show($id)
     {
@@ -33,14 +42,6 @@ class CategoryController extends Controller
             return response()->json(['error' => 'Not found'], 404);
         
         return response()->json($category, 200);
-    }
-
-    //metodo para cadastrar na base
-    public function store(StoreUpdateCategoryFormRequest $request)
-    {
-        $category = $this->category->create($request->all());
-        
-        return response()->json($category, 201);
     }
 
     //metodo para editar o registro
@@ -63,5 +64,18 @@ class CategoryController extends Controller
         $category->delete();
 
         return response()->json(['success' => true], 204);
+    }
+
+    public function products($id)
+    {
+        if(!$category = $this->category->find($id))
+            return response()->json(['error' => 'Not found'], 404);
+        
+        $products = $category->products()->paginate($this->totalPage);
+
+        return response()->json([
+            'category' => $category,
+            'products' => $products,
+        ]);
     }
 }
